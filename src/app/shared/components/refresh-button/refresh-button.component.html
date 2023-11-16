@@ -1,0 +1,22 @@
+<div class="justify-content-center d-flex gap-2 m-3 align-items-center">
+  <span class="card-text fs-5">Autorefresh in</span>
+  <div class="position-relative">
+    <mat-progress-spinner
+      class="example-margin"
+      color="primary"
+      [mode]="mode"
+      [value]="(value / 15) * 100"
+      [diameter]="32"
+    />
+    <span class="position-absolute top-50 start-50 translate-middle">{{
+      value
+    }}</span>
+  </div>
+  <button
+    (click)="refreshTrigger()"
+    type="button"
+    class="btn btn-outline-secondary"
+  >
+    <span class="iconify" data-icon="bi:arrow-repeat"></span> Refresh
+  </button>
+</div>

@@ -1,0 +1,31 @@
+<div class="input-group">
+  <input
+    type="text"
+    readonly
+    [value]="value"
+    class="form-control"
+    placeholder="Recipient's username"
+    aria-label="Recipient's username"
+    aria-describedby="button-addon2"
+  />
+  <button
+    (click)="copyToClipboard()"
+    class="btn"
+    [ngClass]="{
+      'btn-outline-primary': !copied,
+      'btn-success': copied
+    }"
+    type="button"
+    id="button-addon2"
+  >
+    <span *ngIf="copied; else copy">
+      <span class="iconify" data-icon="bi:check"></span>
+    </span>
+    <ng-template #copy>
+      <span>
+        <span class="iconify" data-icon="bi:copy"></span>
+      </span>
+    </ng-template>
+    Copy
+  </button>
+</div>

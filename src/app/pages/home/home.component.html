@@ -1,0 +1,42 @@
+<div class="container p-2 h-100">
+  <header></header>
+  <main class="card h-100">
+    <menu class="mx-auto card-body col-md-6">
+      <div>
+        <app-copy-input [value]="emailSession" />
+        <app-refresh-button [value]="secondsToRefresh" (refresh)="refresh()" />
+      </div>
+    </menu>
+    <div class="d-flex h-100">
+      <aside class="card rounded-0 col-md-3">
+        <div class="card-header">
+          <h3 class="card-title mb-0">Inbox</h3>
+        </div>
+        <mat-list class="list-group list-group-flush p-0">
+          <mat-list-item
+            *ngFor="let email of inBox; trackBy: emailByUrl"
+            class="list-group-item list-group-item-action"
+            [ngClass]="{
+              active:
+                emailInView && emailInView.downloadUrl === email.downloadUrl
+            }"
+            (click)="selectEmail(email)"
+          >
+            <div matListItemTitle>{{ email.headerSubject }}</div>
+            <div matListItemLine>{{ email.text }}</div>
+            <div matListItemLine>{{ email.fromAddr }}</div>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+        </mat-list>
+      </aside>
+      <section class="card rounded-0 col-md-9 bg-body-tertiary p-2 h-100">
+        <h2 class="card-title mb-0 mx-4">
+          {{ emailInView ? emailInView.headerSubject : "" }}
+        </h2>
+        <article class="card rounded-1 m-2 h-100 overflow-auto d-flex">
+          <div [innerHTML]="emailInView?.html" class="card-body"></div>
+        </article>
+      </section>
+    </div>
+  </main>
+</div>
