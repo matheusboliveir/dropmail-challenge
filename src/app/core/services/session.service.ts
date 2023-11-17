@@ -31,7 +31,7 @@ export class SessionService {
     return this.getSession()?.id || null;
   }
 
-  public remoseSession(): void {
-    window.sessionStorage.clear();
+  public removeSession(): void {
+    window.sessionStorage.removeItem(KEY);
   }
 }

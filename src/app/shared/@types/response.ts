@@ -3,6 +3,7 @@ import { Email, Session } from './email';
 export type SessionResponse = { introduceSession: Session };
 
 export type EmailResponse = {
+  expiredAt: string;
   session: { mails: Email[] };
 };
 

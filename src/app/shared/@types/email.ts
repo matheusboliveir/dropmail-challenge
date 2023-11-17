@@ -1,5 +1,6 @@
 export interface Email {
   toAddr: string;
+  id: string;
   text: string;
   rawSize: number;
   html: string;

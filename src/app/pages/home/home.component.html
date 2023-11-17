@@ -1,24 +1,47 @@
-<div class="container p-2 h-100">
-  <header></header>
-  <main class="card h-100">
+<div class="container d-flex flex-column p-2 h-100">
+  <header class="d-flex g-3 align-items-center">
+    <img
+      src="assets/images/emailme-logo.png"
+      alt="logo"
+      class="p-2"
+      width="64"
+    />
+    <h1 class="fw-medium m-0">DropMail.me</h1>
+  </header>
+  <main class="card flex-grow-1">
     <menu class="mx-auto card-body col-md-6">
-      <div>
+      <div class="d-flex flex-column">
         <app-copy-input [value]="emailSession" />
         <app-refresh-button [value]="secondsToRefresh" (refresh)="refresh()" />
+        <button
+          (click)="initSession()"
+          class="btn btn-sm btn-primary align-self-center"
+        >
+          New E-mail
+        </button>
+        <button
+          (click)="trySubscribeToPush()"
+          class="mt-1 btn btn-sm btn-primary align-self-center"
+        >
+          Allow Notification
+        </button>
+        <span *ngIf="sessionExpired" class="text-danger fw-bold text-center"
+          >The session has expired, please get a new email, if you reload the
+          page your current inbox will be lost</span
+        >
       </div>
     </menu>
-    <div class="d-flex h-100">
+    <div *ngIf="!mobileLayout; else mobileInBox" class="d-flex h-100">
       <aside class="card rounded-0 col-md-3">
         <div class="card-header">
           <h3 class="card-title mb-0">Inbox</h3>
         </div>
         <mat-list class="list-group list-group-flush p-0">
           <mat-list-item
-            *ngFor="let email of inBox; trackBy: emailByUrl"
+            *ngFor="let email of inBox; trackBy: emailById"
             class="list-group-item list-group-item-action"
             [ngClass]="{
-              active:
-                emailInView && emailInView.downloadUrl === email.downloadUrl
+              active: emailInView && emailInView.id === email.id
             }"
             (click)="selectEmail(email)"
           >
@@ -34,9 +57,39 @@
           {{ emailInView ? emailInView.headerSubject : "" }}
         </h2>
         <article class="card rounded-1 m-2 h-100 overflow-auto d-flex">
-          <div [innerHTML]="emailInView?.html" class="card-body"></div>
+          <div class="card-body">
+            <div
+              *ngIf="emailInView; else emptyMessage"
+              [innerHTML]="emailInView.html"
+            ></div>
+            <ng-template #emptyMessage>
+              <div
+                class="gap-2 w-100 h-100 d-flex align-items-center justify-content-center flex-column"
+              >
+                <span class="iconify fs-1" data-icon="bi:mailbox"></span>
+                <p class="card-title fs-5 fw-medium">
+                  The email will open here!
+                </p>
+              </div>
+            </ng-template>
+          </div>
         </article>
       </section>
     </div>
+    <ng-template #mobileInBox>
+      <mat-accordion class="h-100 p-3">
+        <mat-expansion-panel *ngFor="let email of inBox; trackBy: emailById">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <p class="m-0">{{ email.headerSubject }}</p>
+            </mat-panel-title>
+            <mat-panel-description>
+              <small class="m-0">{{ email.fromAddr }}</small>
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+          <div [innerHTML]="email.html"></div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </ng-template>
   </main>
 </div>

@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
-import { Apollo, gql } from 'apollo-angular';
-import { Observable, map, of, tap } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Apollo, Query, QueryRef, gql } from 'apollo-angular';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { SessionService } from './session.service';
 import { EmailResponse, SessionResponse } from 'src/app/shared/@types/response';
 import { Email } from 'src/app/shared/@types/email';
@@ -10,6 +10,9 @@ import { Email } from 'src/app/shared/@types/email';
 })
 export class EmailService {
   constructor(private apollo: Apollo, private session: SessionService) {}
+
+  private emailsQuery!: QueryRef<EmailResponse>;
+  private timeToQuery!: number;
 
   public initSession(): Observable<string> {
     return this.apollo
@@ -30,6 +33,7 @@ export class EmailService {
         map((response) => {
           if (response.data) {
             this.session.setSession(response.data.introduceSession);
+            if (this.emailsQuery) this.refetchEmails();
             return response.data?.introduceSession.addresses[0].address;
           }
           return '';
@@ -37,15 +41,18 @@ export class EmailService {
       );
   }
 
-  public getEmails(): Observable<Email[]> {
-    const id = this.session.getSessionId();
+  public getEmails(pollInterval: number): Observable<Email[]> {
+    const id = this.session.getSession()?.id;
+    this.timeToQuery = pollInterval;
     if (!id) throw new Error('invalid session');
-    return this.apollo
-      .watchQuery<EmailResponse>({
+    if (!this.emailsQuery) {
+      this.emailsQuery = this.apollo.watchQuery<EmailResponse>({
         query: gql`
           query ($id: ID!) {
             session(id: $id) {
+              expiresAt
               mails {
+                id
                 rawSize
                 fromAddr
                 toAddr
@@ -60,7 +67,30 @@ export class EmailService {
         variables: {
           id,
         },
+        pollInterval,
+      });
+    }
+    return this.emailsQuery.valueChanges.pipe(
+      map(({ data }) => data.session.mails),
+      tap({
+        error: (error) => {
+          if (error.message === 'session_not_found') {
+            this.session.removeSession();
+          }
+        },
       })
-      .valueChanges.pipe(map(({ data }) => data.session.mails));
+    );
+  }
+
+  public refetchEmails(): void {
+    const id = this.session.getSession()?.id;
+    if (this.emailsQuery) {
+      this.emailsQuery.refetch({ id }).then(() => {
+        this.emailsQuery.stopPolling();
+        this.emailsQuery.startPolling(this.timeToQuery);
+      });
+    } else {
+      throw new Error('Email query is not initialized');
+    }
   }
 }
