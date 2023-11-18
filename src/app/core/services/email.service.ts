@@ -1,6 +1,6 @@
-import { Injectable, OnDestroy } from '@angular/core';
-import { Apollo, Query, QueryRef, gql } from 'apollo-angular';
-import { Observable, catchError, map, of, tap } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Apollo, QueryRef, gql } from 'apollo-angular';
+import { Observable, map, tap } from 'rxjs';
 import { SessionService } from './session.service';
 import { EmailResponse, SessionResponse } from 'src/app/shared/@types/response';
 import { Email } from 'src/app/shared/@types/email';
@@ -33,7 +33,7 @@ export class EmailService {
         map((response) => {
           if (response.data) {
             this.session.setSession(response.data.introduceSession);
-            if (this.emailsQuery) this.refetchEmails();
+            if (this.emailsQuery) this.emailsQuery.stopPolling();
             return response.data?.introduceSession.addresses[0].address;
           }
           return '';
@@ -45,31 +45,29 @@ export class EmailService {
     const id = this.session.getSession()?.id;
     this.timeToQuery = pollInterval;
     if (!id) throw new Error('invalid session');
-    if (!this.emailsQuery) {
-      this.emailsQuery = this.apollo.watchQuery<EmailResponse>({
-        query: gql`
-          query ($id: ID!) {
-            session(id: $id) {
-              expiresAt
-              mails {
-                id
-                rawSize
-                fromAddr
-                toAddr
-                html
-                downloadUrl
-                text
-                headerSubject
-              }
+    this.emailsQuery = this.apollo.watchQuery<EmailResponse>({
+      query: gql`
+        query ($id: ID!) {
+          session(id: $id) {
+            expiresAt
+            mails {
+              id
+              rawSize
+              fromAddr
+              toAddr
+              html
+              downloadUrl
+              text
+              headerSubject
             }
           }
-        `,
-        variables: {
-          id,
-        },
-        pollInterval,
-      });
-    }
+        }
+      `,
+      variables: {
+        id,
+      },
+      pollInterval,
+    });
     return this.emailsQuery.valueChanges.pipe(
       map(({ data }) => data.session.mails),
       tap({

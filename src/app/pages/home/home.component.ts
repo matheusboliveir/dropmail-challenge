@@ -89,6 +89,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   public initSession() {
+    if (this.sessionSubscription) {
+      this.sessionSubscription.unsubscribe();
+      this.emailSubscription.unsubscribe();
+    }
     this.sessionSubscription = this.email.initSession().subscribe((email) => {
       this.emailSession = email;
       this.inBox = [];
